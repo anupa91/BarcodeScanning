@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BarcodeScanning</string>
+
+    <!--MainActivity Hints-->
+    <string name="activity_main_title">Barcode Scanning</string>
+    <string name="activity_main_scanned_code_text">Scanned Code</string>
+    <string name="activity_main_clear_scanned_data_btn_text">Clear Scanned Data</string>
+    <string name="activity_main_flash_on_text">Flash On</string>
+    <string name="activity_main_flash_off_text">Flash Off</string>
+</resources>
