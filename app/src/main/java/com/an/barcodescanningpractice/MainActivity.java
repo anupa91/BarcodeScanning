@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -24,6 +25,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -96,12 +98,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "----> onRequestPermissionResult is called <----");
         switch (requestCode) {
             case REQUEST_RUNTIME_PERMISSION_CAMERA: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.i(TAG, "----> Camera permission granted <----");
                     setUpQRScanner();
-                } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                } else {
                     Log.i(TAG, "----> Camera permission denied <----");
-                    boolean showRational = ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0]);
+                    boolean showRational = ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.CAMERA);
                     if (showRational) {
                         Log.i(TAG, "----> Checkbox unchecked ---->");
                         requestRunTimePermissionForAccessCamera();
@@ -129,17 +131,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .build();
 
         Log.d(TAG, "+---------> setUpQRScanner <---------+");
+        mSvCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                try {
+                    Log.d(TAG, "+---------> surfaceCreated <---------+");
+                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
 
-        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        try {
-            mCameraSource.start(mSvCameraView.getHolder());
-        } catch (Exception ex) {
-            Snackbar.make(mLlLayoutBase, "Camera is not working", Snackbar.LENGTH_LONG).show();
-            ex.printStackTrace();
-        }
+                    Log.d(TAG, "+---------> start <---------+");
+                    mCameraSource.start(mSvCameraView.getHolder());
 
+                } catch (IOException ie) {
+                    Log.e("CAMERA SOURCE", ie.getMessage());
+                }
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mCameraSource.stop();
+            }
+        });
 
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
             @Override
